@@ -88,7 +88,7 @@ func (s *Service) List(ctx context.Context, limit, offset int32) ([]Product, err
 func (s *Service) Get(ctx context.Context, id int64) (Product, error) {
 	row, err := s.queries.GetProduct(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return Product{}, err
+		return Product{}, ErrNotFound
 	}
 	if err != nil {
 		return Product{}, err

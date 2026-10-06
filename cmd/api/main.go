@@ -10,6 +10,7 @@ import (
 	"go-monolith/internal/product"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -32,8 +33,15 @@ func main() {
 		log.Fatalf("ping database: %v", err)
 	}
 
+	log.Printf("Listening on %s", cfg.Addr)
+	if err := http.ListenAndServe(cfg.Addr, newMux(pool, []byte(cfg.JWTSecret), cfg.JWTTTL)); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func newMux(pool *pgxpool.Pool, secret []byte, ttl time.Duration) http.Handler {
 	queries := db.New(pool)
-	authHandler := auth.NewHandler(auth.NewService(queries, []byte(cfg.JWTSecret), cfg.JWTTTL))
+	authHandler := auth.NewHandler(auth.NewService(queries, secret, ttl))
 	productHandler := product.NewHandler(product.NewService(queries))
 	cartHandler := cart.NewHandler(cart.NewService(queries))
 	orderHandler := order.NewHandler(order.NewService(pool))
@@ -63,8 +71,5 @@ func main() {
 	mux.Handle("GET /orders", authHandler.RequireUser(http.HandlerFunc(orderHandler.List)))
 	mux.Handle("GET /orders/{id}", authHandler.RequireUser(http.HandlerFunc(orderHandler.Get)))
 
-	log.Printf("Listening on %s", cfg.Addr)
-	if err := http.ListenAndServe(cfg.Addr, mux); err != nil {
-		log.Fatal(err)
-	}
+	return mux
 }
