@@ -1,0 +1,135 @@
+@host = http://localhost:8080
+
+### Health
+GET {{host}}/healthz
+
+### Register
+POST {{host}}/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@doe.com",
+  "password": "johndoe123"
+}
+
+### Login
+POST {{host}}/login
+Content-Type: application/json
+
+{
+  "email": "john@doe.com",
+  "password": "johndoe123"
+}
+
+> {%
+    client.global.set("access_token", response.body.access_token);
+%}
+
+### Me
+GET {{host}}/me
+Authorization: Bearer {{access_token}}
+
+### Create product
+POST {{host}}/products
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "MacBook",
+  "description": "bagus ini",
+  "price_cents": 5000,
+  "stock": 5
+}
+
+> {%
+    client.global.set("product_id", response.body.id);
+%}
+
+### List products
+GET {{host}}/products
+Authorization: Bearer {{access_token}}
+
+### Get product
+GET {{host}}/products/{{product_id}}
+Authorization: Bearer {{access_token}}
+
+### Update product
+PATCH {{host}}/products/{{product_id}}
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "MacBook",
+  "description": "bagus banget ini",
+  "price_cents": 5000,
+  "stock": 5
+}
+
+### Create product to delete
+POST {{host}}/products
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "name": "Cable",
+  "description": "throwaway",
+  "price_cents": 1000,
+  "stock": 1
+}
+
+> {%
+    client.global.set("delete_product_id", response.body.id);
+%}
+
+### Delete product
+DELETE {{host}}/products/{{delete_product_id}}
+Authorization: Bearer {{access_token}}
+
+### Get cart
+GET {{host}}/cart
+Authorization: Bearer {{access_token}}
+
+### Add cart item
+PUT {{host}}/cart/items
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "product_id": {{product_id}},
+  "quantity": 2
+}
+
+### Remove cart item
+DELETE {{host}}/cart/items/{{product_id}}
+Authorization: Bearer {{access_token}}
+
+### Add cart item again
+PUT {{host}}/cart/items
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "product_id": {{product_id}},
+  "quantity": 2
+}
+
+### Checkout
+POST {{host}}/checkout
+Authorization: Bearer {{access_token}}
+
+> {%
+    client.global.set("order_id", response.body.id);
+%}
+
+### List orders
+GET {{host}}/orders
+Authorization: Bearer {{access_token}}
+
+### Get order
+GET {{host}}/orders/{{order_id}}
+Authorization: Bearer {{access_token}}
+
+### Cart after checkout
+GET {{host}}/cart
+Authorization: Bearer {{access_token}}
